@@ -8,7 +8,6 @@ Created on Sat Nov 11 16:18:58 2017
 import urllib
 from bs4 import BeautifulSoup
 import pandas as pd
-import csv
 
 page = urllib.request.urlopen('http://web.mta.info/developers/turnstile.html')
 pagehtml = page.read()
@@ -27,29 +26,23 @@ for link in links:
         
 def create_master_turnstile_file(filenames, output_file):
     with open(output_file, 'w') as master_file:
-        colnames = ['C/A','UNIT','SCP','DATEn','TIMEn','DESCn','ENTRIESn','EXITSn']
-        master_writer = csv.DictWriter(master_file, fieldnames = colnames)
-        master_writer.writeheader()
-        
+        master_file.write('C/A,UNIT,SCP,DATEn,TIMEn,DESCn,ENTRIESn,EXITSn\n')
         for filename in filenames:
             with open(filename, 'r') as r:
-                file_reader = csv.DictReader(r)
-                print (file_reader)
-                
-                for row in file_reader:
-                    new_point = {}
+                count = 1
+                for line in r:
+                    if count == 1:
+                        count += 1
+                        continue
                     
-                    new_point['C/A'] = row['C/A']
-                    new_point['UNIT'] = row['UNIT']
-                    new_point['SCP'] = row['SCP']
-                    new_point['DATEn'] = row['DATE']
-                    new_point['TIMEn'] = row['TIME']
-                    new_point['DESCn'] = row['DESC']
-                    new_point['ENTRIESn'] = int(row['ENTRIES'])
-                    new_point['EXITSn'] = int(row['EXITS\n'])                    
-                    
-                    master_writer.writerow(new_point)
-                    
+                    CA = line.find(',')
+                    UNIT = line.find(',', CA+1)
+                    SPC = line.find(',', UNIT+1)
+                    STATION = line.find(',', SPC+1)
+                    LINE = line.find(',', STATION+1)
+                    DIVISION = line.find(',', LINE+1)
+                    master_file.write(line[0:SPC] + line[DIVISION:100] + '\n')
+               
             
 filenames = ["turnstile_170603.txt", "turnstile_170610.txt", "turnstile_170617.txt", "turnstile_170624.txt"]
 output_file = "turnstile_all.txt"
